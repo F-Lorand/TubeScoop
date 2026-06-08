@@ -1,0 +1,19 @@
+# Build artifacts
+dist/
+build/
+*.spec
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# ffmpeg auto-download
+_ffmpeg/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+*.env.local

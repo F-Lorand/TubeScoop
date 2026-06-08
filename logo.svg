@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <!-- Background gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e1e2e"/>
+      <stop offset="100%" stop-color="#11111b"/>
+    </linearGradient>
+    <!-- Cone gradient -->
+    <linearGradient id="cone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d4a373"/>
+      <stop offset="100%" stop-color="#bc6c25"/>
+    </linearGradient>
+    <!-- Scoop gradient (strawberry pink) -->
+    <radialGradient id="scoop" cx="0.4" cy="0.35" r="0.65">
+      <stop offset="0%" stop-color="#f9c8d9"/>
+      <stop offset="60%" stop-color="#f28bb4"/>
+      <stop offset="100%" stop-color="#d65a8a"/>
+    </radialGradient>
+    <!-- Highlight/shine -->
+    <radialGradient id="shine" cx="0.3" cy="0.25" r="0.3">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.4)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <!-- Shadow under scoop -->
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="rgba(0,0,0,0.15)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
+    <!-- Drip gradient -->
+    <linearGradient id="drip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f28bb4"/>
+      <stop offset="100%" stop-color="#d65a8a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="200" cy="200" r="190" fill="url(#bg)" stroke="#313244" stroke-width="3"/>
+
+  <!-- ===== ICE CREAM CONE ===== -->
+  <!-- Cone body (inverted triangle with rounded bottom) -->
+  <path d="M140 230 L170 330 Q200 370 230 330 L260 230 Z" fill="url(#cone)" stroke="#a67c52" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- Cone criss-cross pattern -->
+  <line x1="150" y1="250" x2="250" y2="250" stroke="#a67c52" stroke-width="1.5" opacity="0.5"/>
+  <line x1="158" y1="270" x2="242" y2="270" stroke="#a67c52" stroke-width="1.5" opacity="0.5"/>
+  <line x1="166" y1="290" x2="234" y2="290" stroke="#a67c52" stroke-width="1.5" opacity="0.5"/>
+  <line x1="175" y1="310" x2="225" y2="310" stroke="#a67c52" stroke-width="1.5" opacity="0.5"/>
+  <!-- Diagonal lines -->
+  <line x1="168" y1="240" x2="188" y2="325" stroke="#a67c52" stroke-width="1.5" opacity="0.4"/>
+  <line x1="200" y1="240" x2="200" y2="340" stroke="#a67c52" stroke-width="1.5" opacity="0.4"/>
+  <line x1="232" y1="240" x2="212" y2="325" stroke="#a67c52" stroke-width="1.5" opacity="0.4"/>
+
+  <!-- ===== ICE CREAM SCOOP (strawberry pink) ===== -->
+  <!-- Shadow under scoop -->
+  <ellipse cx="200" cy="235" rx="75" ry="15" fill="url(#shadow)"/>
+
+  <!-- Main scoop -->
+  <circle cx="200" cy="185" r="70" fill="url(#scoop)" stroke="#c24b7a" stroke-width="2"/>
+
+  <!-- Shine highlight -->
+  <ellipse cx="180" cy="160" rx="35" ry="25" fill="url(#shine)"/>
+
+  <!-- ===== CHOCOLATE CHIPS ===== -->
+  <!-- Chip 1 -->
+  <path d="M175 165 Q180 158 185 165 Q180 172 175 165Z" fill="#3e2723" transform="rotate(-15 180 165)"/>
+  <!-- Chip 2 -->
+  <ellipse cx="215" cy="175" rx="6" ry="4" fill="#3e2723" transform="rotate(20 215 175)"/>
+  <!-- Chip 3 -->
+  <ellipse cx="195" cy="195" rx="5" ry="3.5" fill="#3e2723" transform="rotate(-10 195 195)"/>
+  <!-- Chip 4 -->
+  <ellipse cx="230" cy="200" rx="5" ry="3.5" fill="#3e2723" transform="rotate(35 230 200)"/>
+  <!-- Chip 5 -->
+  <path d="M170 195 Q173 189 178 193 Q173 199 170 195Z" fill="#3e2723" transform="rotate(45 174 194)"/>
+
+  <!-- ===== DRIPS ===== -->
+  <!-- Main drip left -->
+  <path d="M165 245 Q163 270 167 285 Q169 290 171 285 Q175 265 172 245Z" fill="url(#drip)" opacity="0.9"/>
+  <!-- Main drip right -->
+  <path d="M228 242 Q232 265 230 278 Q228 283 226 278 Q222 260 225 242Z" fill="url(#drip)" opacity="0.9"/>
+  <!-- Small drip center -->
+  <path d="M195 248 Q194 260 196 268 Q198 270 199 268 Q200 258 198 248Z" fill="url(#drip)" opacity="0.85"/>
+
+  <!-- ===== CHERRY ON TOP ===== -->
+  <!-- Cherry stem -->
+  <path d="M200 115 Q190 95 185 85" fill="none" stroke="#2e7d32" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Cherry body -->
+  <circle cx="200" cy="120" r="12" fill="#d32f2f" stroke="#b71c1c" stroke-width="1.5"/>
+  <!-- Cherry shine -->
+  <ellipse cx="195" cy="116" rx="4" ry="3" fill="rgba(255,255,255,0.3)"/>
+
+  <!-- ===== TEXT ===== -->
+  <!-- TubeScoop -->
+  <text x="200" y="380" text-anchor="middle"
+        font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif"
+        font-size="36" font-weight="bold" fill="#cdd6f4"
+        letter-spacing="4">
+    TubeScoop
+  </text>
+</svg>
