@@ -57,6 +57,12 @@ pip install yt-dlp
 python3 yt_dlp_gui.py
 ```
 
+> **Windows users:** The command above uses `python3`. If that doesn't work, try `python` instead:
+> ```powershell
+> pip install yt-dlp
+> python yt_dlp_gui.py
+> ```
+
 ### Option 2: Portable Build (no Python needed)
 
 ```bash
