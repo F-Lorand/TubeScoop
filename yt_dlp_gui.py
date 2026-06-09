@@ -274,92 +274,140 @@ def _download_ffmpeg(log_fn=print):
 #  YT-DLP: FIND THE BINARY (bundled .exe or system PATH)
 # ══════════════════════════════════════════════════════════════════════
 #
-# In PyInstaller builds, yt-dlp.exe (or yt-dlp on Mac/Linux) is bundled
-# alongside the app inside _MEIPASS. When running from source, we fall
-# back to pip-installing it or finding it on PATH.
+# In PyInstaller builds, yt-dlp.exe is bundled inside _MEIPASS but we
+# copy it to a persistent user folder (%APPDATA%/TubeScoop/bin/) so
+# yt-dlp --update can keep it fresh across sessions.
+# When running from source, we pip-install or find it on PATH.
+
+# Persistent storage for standalone yt-dlp updates (frozen builds only)
+_USER_BIN_DIR = None
+
+def _user_bin_dir():
+    """Get a persistent directory for user-modifiable binaries (not inside .exe)."""
+    global _USER_BIN_DIR
+    if _USER_BIN_DIR is not None:
+        return _USER_BIN_DIR
+    try:
+        # In frozen builds, store alongside the .exe if writable
+        exe_dir = os.path.dirname(sys.executable)
+        test_path = os.path.join(exe_dir, ".tube_scoop_write_test")
+        try:
+            open(test_path, "w").close()
+            os.unlink(test_path)
+            _USER_BIN_DIR = os.path.join(exe_dir, "_bin")
+            os.makedirs(_USER_BIN_DIR, exist_ok=True)
+            return _USER_BIN_DIR
+        except (OSError, PermissionError):
+            pass
+    except AttributeError:
+        pass
+    # Fallback: %APPDATA%/TubeScoop/bin on Windows, ~/.local/share/TubeScoop/bin on others
+    if sys.platform == "win32":
+        base = os.environ.get("APPDATA", os.path.expanduser("~"))
+    else:
+        base = os.path.join(os.path.expanduser("~"), ".local", "share")
+    _USER_BIN_DIR = os.path.join(base, "TubeScoop", "bin")
+    os.makedirs(_USER_BIN_DIR, exist_ok=True)
+    return _USER_BIN_DIR
+
 
 def _ytdlp_binary():
     """
     Return the path to the yt-dlp executable.
-    
-    - Frozen (.exe build): returns the bundled binary inside _MEIPASS
+
+    - Frozen (.exe build): returns a persistent copy in user bin dir,
+      copying from the bundle on first run so --update can work.
     - Source: returns 'yt-dlp' (found via shutil.which or pip-installed)
     """
+    # Frozen mode
     try:
-        # We're inside a PyInstaller bundle — yt-dlp binary is right there
         base = sys._MEIPASS
         binary = "yt-dlp.exe" if sys.platform == "win32" else "yt-dlp"
         bundled = os.path.join(base, binary)
+
         if os.path.isfile(bundled):
-            return bundled
+            # Copy to persistent location so --update can replace it
+            user_dir = _user_bin_dir()
+            user_bin = os.path.join(user_dir, binary)
+
+            # Copy if missing or if the bundled version is newer
+            if not os.path.isfile(user_bin):
+                shutil.copy2(bundled, user_bin)
+                if not sys.platform.startswith("win"):
+                    os.chmod(user_bin, 0o755)
+            return user_bin
     except AttributeError:
         pass
+
     # Source mode — look on PATH
     return shutil.which("yt-dlp") or "yt-dlp"
 
 
 def _ensure_ytdlp(log_fn=print):
     """
-    Make sure yt-dlp is available.
-    
-    In PyInstaller builds, yt-dlp is bundled inside the .exe — nothing to do.
-    In source mode, tries pip install if missing, then runs --update.
-    
+    Make sure yt-dlp is available and reasonably up to date.
+
+    In frozen builds, yt-dlp is copied from the bundle to a persistent
+    user folder so --update can keep it fresh. In source mode, pip-installs
+    if missing and then runs --update.
+
     Returns
     -------
     str or None — full path to yt-dlp binary, or None if unavailable
     """
-    # ── Frozen (.exe) bundle: yt-dlp is included ────────────
+    is_frozen = False
     try:
-        base = sys._MEIPASS
-        bundled = os.path.join(base, "yt-dlp.exe" if sys.platform == "win32" else "yt-dlp")
-        if os.path.isfile(bundled):
-            log_fn(f"Using bundled yt-dlp ({os.path.getsize(bundled) // 1024} KB)")
-            return bundled
-    except AttributeError:
+        is_frozen = hasattr(sys, "_MEIPASS")
+    except Exception:
         pass
 
-    # ── Source mode: find or install via pip ──
-    found = shutil.which("yt-dlp")
-
-    if not found:
-        log_fn("yt-dlp not found — installing via pip ...")
-        try:
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", "yt-dlp", "--quiet"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            )
-            found = shutil.which("yt-dlp")
-        except Exception as e:
-            log_fn(f"yt-dlp install failed: {e}")
+    # ── Frozen build: copy to writable user dir if needed ────
+    if is_frozen:
+        found = _ytdlp_binary()
+        if not found:
+            log_fn("Error: bundled yt-dlp not found inside .exe")
             return None
+    else:
+        # ── Source mode: find or install via pip ──
+        found = shutil.which("yt-dlp")
+        if not found:
+            log_fn("yt-dlp not found -- installing via pip ...")
+            try:
+                subprocess.check_call(
+                    [sys.executable, "-m", "pip", "install", "yt-dlp", "--quiet"],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+                found = shutil.which("yt-dlp")
+            except Exception as e:
+                log_fn(f"yt-dlp install failed: {e}")
+                return None
 
-    # ── Check for updates (source mode only) ──
-    log_fn("Checking for yt-dlp update ...")
-    try:
-        result = subprocess.run(
-            [found, "--update"],
-            capture_output=True, text=True, timeout=30,
-        )
-        out = (result.stdout + result.stderr).strip()
-
-        if "Already up to date" in out:
-            log_fn("yt-dlp is already the latest version.")
-        elif "Updated" in out or result.returncode == 0:
-            log_fn("yt-dlp updated to the latest version.")
-            found = shutil.which("yt-dlp") or found
-        else:
-            log_fn("yt-dlp self-update unavailable — trying pip upgrade ...")
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp", "--quiet"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    # ── Check for updates via yt-dlp --update ────────────────
+    if found:
+        log_fn("Checking for yt-dlp update ...")
+        try:
+            result = subprocess.run(
+                [found, "--update"],
+                capture_output=True, text=True, timeout=30,
             )
-            log_fn("yt-dlp upgraded via pip.")
-    except Exception as e:
-        log_fn(f"yt-dlp update check failed: {e}")
+            out = (result.stdout + result.stderr).strip()
+
+            if "Already up to date" in out:
+                log_fn("yt-dlp is already the latest version.")
+            elif "Updated" in out or result.returncode == 0:
+                log_fn("yt-dlp updated to the latest version!")
+            else:
+                # --update may fail on pip-installed versions
+                log_fn("yt-dlp self-update unavailable -- trying pip upgrade ...")
+                subprocess.check_call(
+                    [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp", "--quiet"],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+                log_fn("yt-dlp upgraded via pip.")
+        except Exception as e:
+            log_fn(f"yt-dlp update check failed: {e}")
 
     return found
-
 
 # ══════════════════════════════════════════════════════════════════════
 #  DOWNLOAD WORKER (background thread)
@@ -474,7 +522,7 @@ class DownloadWorker:
                 text=True, bufsize=1, env=env,
             )
         except FileNotFoundError:
-            self._log("error", "yt-dlp not found. Run: pip install yt-dlp")
+            self._log("error", "TubeScoop can't find its download engine. Try the Check for Updates button.")
             return
         
         # ── Parse yt-dlp's output line by line ───────────────────
@@ -788,7 +836,7 @@ class TubeScoopApp(ttk.Frame):
         update_row = ttk.Frame(self)
         update_row.pack(fill=tk.X, pady=(0, 12))
         self.update_btn = ttk.Button(
-            update_row, text="🔄  Update yt-dlp", style="Browse.TButton",
+            update_row, text="🔄  Check for Updates", style="Browse.TButton",
             command=self._update_ytdlp,
         )
         self.update_btn.pack(side=tk.LEFT)
@@ -1035,9 +1083,12 @@ class TubeScoopApp(ttk.Frame):
         # ── Check dependencies ───────────────────────────────────
         self._log_append("🔧 Checking dependencies …")
         if not _ensure_ytdlp(self._log_append):
-            messagebox.showerror("Missing Dependency",
-                                 "yt-dlp could not be installed.\n"
-                                 "Try: pip install yt-dlp")
+            messagebox.showerror("Missing Component",
+                                 "TubeScoop's download engine didn't start.\n"
+                                 "Try closing and re-opening TubeScoop.\n"
+                                 "If the problem persists, download the latest\n"
+                                 "version from:\n"
+                                 "https://github.com/F-Lorand/TubeScoop/releases")
             return
         
         if not _ffmpeg_binary():
