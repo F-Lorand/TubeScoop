@@ -258,77 +258,94 @@ def _download_ffmpeg(log_fn=print):
 
 
 # ══════════════════════════════════════════════════════════════════════
-#  YT-DLP: INSTALL & AUTO-UPDATE
+#  YT-DLP: FIND THE BINARY (bundled .exe or system PATH)
 # ══════════════════════════════════════════════════════════════════════
 #
-# yt-dlp changes frequently because YouTube (and other sites) tweak
-# their APIs. We check for updates every time the user clicks Download.
-# 
-# Two update mechanisms (tried in order):
-#   1. yt-dlp --update  — downloads a precompiled binary (fast, reliable)
-#   2. pip install --upgrade yt-dlp — fallback for pip/system installs
+# In PyInstaller builds, yt-dlp.exe (or yt-dlp on Mac/Linux) is bundled
+# alongside the app inside _MEIPASS. When running from source, we fall
+# back to pip-installing it or finding it on PATH.
+
+def _ytdlp_binary():
+    """
+    Return the path to the yt-dlp executable.
+    
+    - Frozen (.exe build): returns the bundled binary inside _MEIPASS
+    - Source: returns 'yt-dlp' (found via shutil.which or pip-installed)
+    """
+    try:
+        # We're inside a PyInstaller bundle — yt-dlp binary is right there
+        base = sys._MEIPASS
+        binary = "yt-dlp.exe" if sys.platform == "win32" else "yt-dlp"
+        bundled = os.path.join(base, binary)
+        if os.path.isfile(bundled):
+            return bundled
+    except AttributeError:
+        pass
+    # Source mode — look on PATH
+    return shutil.which("yt-dlp") or "yt-dlp"
+
 
 def _ensure_ytdlp(log_fn=print):
     """
-    Make sure yt-dlp is installed on this system AND running the latest version.
+    Make sure yt-dlp is available.
     
-    If yt-dlp isn't found, installs via pip. If found, runs --update
-    to check for a newer version.
-    
-    Parameters
-    ----------
-    log_fn : callable(str)
-        Status logger (usually self._log_append from the GUI)
+    In PyInstaller builds, yt-dlp is bundled inside the .exe — nothing to do.
+    In source mode, tries pip install if missing, then runs --update.
     
     Returns
     -------
-    bool — True if yt-dlp is available and usable
+    str or None — full path to yt-dlp binary, or None if unavailable
     """
-    # Try to locate yt-dlp on the system PATH
+    # ── Frozen (.exe) bundle: yt-dlp is included ────────────
+    try:
+        base = sys._MEIPASS
+        bundled = os.path.join(base, "yt-dlp.exe" if sys.platform == "win32" else "yt-dlp")
+        if os.path.isfile(bundled):
+            log_fn(f"Using bundled yt-dlp ({os.path.getsize(bundled) // 1024} KB)")
+            return bundled
+    except AttributeError:
+        pass
+
+    # ── Source mode: find or install via pip ──
     found = shutil.which("yt-dlp")
-    
-    # ── Not installed? Install via pip ──
+
     if not found:
-        log_fn("yt-dlp not found — installing via pip …")
+        log_fn("yt-dlp not found — installing via pip ...")
         try:
             subprocess.check_call(
                 [sys.executable, "-m", "pip", "install", "yt-dlp", "--quiet"],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             )
-            return shutil.which("yt-dlp") is not None
+            found = shutil.which("yt-dlp")
         except Exception as e:
             log_fn(f"yt-dlp install failed: {e}")
-            return False
+            return None
 
-    # ── Already installed? Check for updates ──
-    log_fn("📡  Checking for yt-dlp update …")
+    # ── Check for updates (source mode only) ──
+    log_fn("Checking for yt-dlp update ...")
     try:
-        # yt-dlp --update is the built-in self-updater (downloads a new binary)
         result = subprocess.run(
             [found, "--update"],
             capture_output=True, text=True, timeout=30,
         )
         out = (result.stdout + result.stderr).strip()
-        
+
         if "Already up to date" in out:
-            log_fn("✅  yt-dlp is already the latest version.")
+            log_fn("yt-dlp is already the latest version.")
         elif "Updated" in out or result.returncode == 0:
-            log_fn("✅  yt-dlp updated to the latest version.")
-            # The --update flag may replace the binary; re-resolve PATH
+            log_fn("yt-dlp updated to the latest version.")
             found = shutil.which("yt-dlp") or found
         else:
-            # --update may fail on pip-installed versions → try pip upgrade
-            log_fn("⚠️  yt-dlp self-update unavailable — trying pip upgrade …")
+            log_fn("yt-dlp self-update unavailable — trying pip upgrade ...")
             subprocess.check_call(
                 [sys.executable, "-m", "pip", "install", "--upgrade", "yt-dlp", "--quiet"],
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             )
-            log_fn("✅  yt-dlp upgraded via pip.")
+            log_fn("yt-dlp upgraded via pip.")
     except Exception as e:
-        # Timeout, network error, etc. — not critical, carry on
-        log_fn(f"⚠️  yt-dlp update check failed: {e}")
+        log_fn(f"yt-dlp update check failed: {e}")
 
-    return shutil.which("yt-dlp") is not None
+    return found
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -390,7 +407,11 @@ class DownloadWorker:
             env["PATH"] = os.path.dirname(ff) + os.pathsep + env.get("PATH", "")
         
         # ── Build the yt-dlp command ─────────────────────────────
-        cmd = ["yt-dlp", "--no-warnings", "--progress", "--newline"]
+        yt = _ytdlp_binary()
+        if not yt:
+            self._log("error", "yt-dlp binary not found — this shouldn't happen in the bundled build.")
+            return
+        cmd = [yt, "--no-warnings", "--progress", "--newline"]
         
         # Output template: save files as "Title.ext" in the chosen folder
         cmd.extend(["-o", os.path.join(self.out_dir, "%(title)s.%(ext)s")])
