@@ -9,6 +9,10 @@ on:
         description: "Release version (e.g. v1.0.1)"
         required: false
         default: "nightly"
+      create_release:
+        description: "Create a GitHub Release"
+        type: boolean
+        default: false
 
 jobs:
   build-windows:
@@ -30,8 +34,26 @@ jobs:
       - name: Build .exe
         run: python build_portable.py
 
-      - name: Upload artifact
+      - name: Upload artifact (Actions tab)
         uses: actions/upload-artifact@v4
         with:
           name: TubeScoop-Windows-${{ github.ref_name || inputs.version }}
           path: dist/TubeScoop.exe
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          name: TubeScoop ${{ github.ref_name }}
+          body: |
+            ## TubeScoop ${{ github.ref_name }}
+
+            🍨 A simple, teen-friendly GUI for yt-dlp.
+
+            ### What's new
+            See the [commit log](https://github.com/F-Lorand/TubeScoop/commits/${{ github.ref_name }}) for changes in this release.
+
+            ### Downloads
+            - **Windows:** `TubeScoop.exe` (portable — no install needed)
+          files: dist/TubeScoop.exe
+          generate_release_notes: true
