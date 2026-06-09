@@ -14,6 +14,9 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -56,4 +59,3 @@ jobs:
             ### Downloads
             - **Windows:** `TubeScoop.exe` (portable — no install needed)
           files: dist/TubeScoop.exe
-          generate_release_notes: true
