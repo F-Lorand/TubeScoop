@@ -129,11 +129,24 @@ def _ffmpeg_binary():
     """
     Find the ffmpeg executable, checking bundled location first, then PATH.
     
+    In PyInstaller .exe builds, ffmpeg.exe is bundled at the _MEIPASS root.
+    Otherwise checks the _ffmpeg/ folder (auto-downloaded) and system PATH.
+    
     Returns
     -------
     str or None — absolute path to ffmpeg, or None if not found
     """
-    # Step 1: look in our _ffmpeg/ folder (downloaded alongside the app)
+    # Step 0: PyInstaller bundle — ffmpeg is right inside _MEIPASS
+    try:
+        base = sys._MEIPASS
+        name = "ffmpeg.exe" if sys.platform == "win32" else "ffmpeg"
+        bundled = os.path.join(base, name)
+        if os.path.isfile(bundled):
+            return bundled
+    except AttributeError:
+        pass
+
+    # Step 1: look in our _ffmpeg/ folder (auto-downloaded alongside the app)
     if sys.platform == "win32":
         name = "ffmpeg.exe"
     else:

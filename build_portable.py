@@ -17,6 +17,7 @@ import urllib.request
 import subprocess
 import platform
 import json
+import zipfile
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 DIST_DIR = os.path.join(PROJECT_DIR, "dist")
@@ -55,6 +56,33 @@ def _download_ytdlp():
     return out_path
 
 
+def _download_ffmpeg_windows():
+    """Download ffmpeg.exe (Windows static build) and extract it."""
+    os.makedirs(BUNDLE_DIR, exist_ok=True)
+    exe_path = os.path.join(BUNDLE_DIR, "ffmpeg.exe")
+
+    if os.path.isfile(exe_path):
+        print(f"  ffmpeg.exe already cached: {exe_path}")
+        return exe_path
+
+    url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip"
+    zip_path = os.path.join(BUNDLE_DIR, "ffmpeg.zip")
+    print(f"  Downloading ffmpeg (Windows) from {url} ...")
+    urllib.request.urlretrieve(url, zip_path)
+    with zipfile.ZipFile(zip_path, "r") as z:
+        for member in z.namelist():
+            if member.endswith("ffmpeg.exe"):
+                z.extract(member, BUNDLE_DIR)
+                src = os.path.join(BUNDLE_DIR, member)
+                if src != exe_path:
+                    os.rename(src, exe_path)
+                break
+    os.unlink(zip_path)
+    size = os.path.getsize(exe_path)
+    print(f"  Downloaded: {exe_path} ({size / 1024 / 1024:.1f} MB)")
+    return exe_path
+
+
 def main():
     onefile = "--onedir" not in sys.argv
 
@@ -79,6 +107,13 @@ def main():
     yt_dlp_path = _download_ytdlp()
     yt_dlp_name = os.path.basename(yt_dlp_path)
 
+    # Download ffmpeg for Windows builds (needed for MP3 conversion)
+    ffmpeg_path = None
+    if sys.platform == "win32":
+        print("Downloading ffmpeg for bundling...")
+        ffmpeg_path = _download_ffmpeg_windows()
+        ffmpeg_name = os.path.basename(ffmpeg_path)
+
     # -- Build command ------------------------------------------
     cmd = [
         sys.executable, "-m", "PyInstaller",
@@ -96,14 +131,16 @@ def main():
         cmd.append("--onedir")
         final = os.path.join(DIST_DIR, name)
 
-    # Bundle the yt-dlp binary alongside the app
+    # Bundle binaries alongside the app
     cmd.extend([
         f"--name={name}",
-        "--windowed",                # no console window on Windows/macOS
-        "--icon=NONE",               # no icon for now
-        "--add-data", f"requirements.txt{os.pathsep}.",  # bundle for reference
-        "--add-data", f"{yt_dlp_path}{os.pathsep}.",     # bundle yt-dlp binary
+        "--windowed",
+        "--icon=NONE",
+        "--add-data", f"requirements.txt{os.pathsep}.",
+        "--add-data", f"{yt_dlp_path}{os.pathsep}.",
     ])
+    if ffmpeg_path:
+        cmd.extend(["--add-data", f"{ffmpeg_path}{os.pathsep}."])
 
     # Platform-specific options
     if sys.platform == "darwin":
