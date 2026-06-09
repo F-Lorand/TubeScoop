@@ -8,6 +8,8 @@ A dead-simple GUI for downloading audio/video from YouTube and hundreds of other
 
 No terminal needed. Paste a link, pick a format, click **Scoop it!**
 
+> I built this so that my kids could get music without having to download sketchy software, and now I'm sharing it with the world! 🍨
+
 **[⬇️ Download for Windows](https://github.com/F-Lorand/TubeScoop/releases/latest)** – no Python required.
 
 ---
@@ -25,11 +27,11 @@ pip install yt-dlp && curl -sLO https://raw.githubusercontent.com/F-Lorand/TubeS
 - **Playlist support** — processes every video in a playlist and extracts audio
 - Pick a range: scoop items 3–8 of a 50-video playlist
 - Fully **self-contained** — auto-downloads ffmpeg if missing (needed for MP3 conversion)
-- **Auto-updates yt-dlp** — checks for updates before every scoop
-- **Manual update button** — "🔄 Update yt-dlp" lets you force a check anytime
+- **Auto-updates** — checks for yt-dlp updates before every scoop
+- **Manual update button** — "🔄 Check for Updates" lets you force a check anytime
 - Embed thumbnail & metadata in MP3 files
 - **+Folder button** — create new sub-folders right from the app
-- Simple, teen-friendly interface — paste URL, pick format, scoot
+- Simple, teen-friendly interface — paste URL, pick format, scoop
 
 ## How to Use
 
