@@ -8,15 +8,15 @@ A dead-simple GUI for downloading audio/video from YouTube and hundreds of other
 
 No terminal needed. Paste a link, pick a format, click **Scoop it!**
 
+**[⬇️ Download for Windows](https://github.com/F-Lorand/TubeScoop/releases/latest)** – no Python required.
+
 ---
 
-## One-Line Install
+## Quick Start
 
 ```bash
 pip install yt-dlp && curl -sLO https://raw.githubusercontent.com/F-Lorand/TubeScoop/main/yt_dlp_gui.py && python3 yt_dlp_gui.py
 ```
-
-Or grab the **[latest portable release](https://github.com/F-Lorand/TubeScoop/releases/latest)** — no Python needed.
 
 ## Features
 
@@ -50,28 +50,29 @@ Paste a playlist URL and TubeScoop will download every video. To get only a subs
 
 ## Installation
 
-### Option 1: Run from Source (any OS with Python)
+### 🪟 Windows: Download the latest release
+
+Grab **[TubeScoop.exe](https://github.com/F-Lorand/TubeScoop/releases/latest)** from the latest release — **no Python needed.** Just download, unzip, and double-click.
+
+[![Latest Release](https://img.shields.io/github/v/release/F-Lorand/TubeScoop?label=latest&color=89b4fa)](https://github.com/F-Lorand/TubeScoop/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/F-Lorand/TubeScoop/total?color=cba6f7)](https://github.com/F-Lorand/TubeScoop/releases)
+
+### 🐧 Mac / Linux: Run from Source
 
 ```bash
 pip install yt-dlp
 python3 yt_dlp_gui.py
 ```
 
-> **Windows users:** The command above uses `python3`. If that doesn't work, try `python` instead:
-> ```powershell
-> pip install yt-dlp
-> python yt_dlp_gui.py
-> ```
+### 🔧 Build from Source (developers)
 
-### Option 2: Portable Build (no Python needed)
+To build your own `TubeScoop.exe` from the source code:
 
 ```bash
 python build_portable.py
 ```
 
-This creates a standalone `TubeScoop` executable (or `TubeScoop.exe` on Windows) in the `dist/` folder. It includes everything — yt-dlp and ffmpeg auto-download on first run.
-
-**To distribute:** just zip the `dist/TubeScoop` folder (or the single .exe) and share it. Recipients don't need Python or any dependencies.
+This creates a standalone executable in `dist/` that includes everything — yt-dlp and ffmpeg auto-download on first run.
 
 ## Dependencies
 
