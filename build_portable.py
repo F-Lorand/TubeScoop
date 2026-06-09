@@ -4,7 +4,7 @@ Build a standalone / portable executable of TubeScoop using PyInstaller.
 
 Usage:
     python build_portable.py          (one-file exe in dist/)
-    python build_portable.py --onedir (directory-based — faster startup)
+    python build_portable.py --onedir (directory-based -- faster startup)
 """
 
 import os
@@ -24,7 +24,7 @@ def main():
     try:
         import PyInstaller  # noqa
     except ImportError:
-        print("📦 Installing PyInstaller …")
+        print("Installing PyInstaller...")
         subprocess.check_call(
             [sys.executable, "-m", "pip", "install", "pyinstaller"],
             stdout=subprocess.DEVNULL,
@@ -36,7 +36,7 @@ def main():
         if os.path.isdir(p):
             shutil.rmtree(p)
 
-    # ── Build command ──────────────────────────────
+    # -- Build command ------------------------------------------
     cmd = [
         sys.executable, "-m", "PyInstaller",
         "--clean",
@@ -67,20 +67,20 @@ def main():
 
     cmd.append(os.path.join(PROJECT_DIR, "yt_dlp_gui.py"))
 
-    print("🔨 Building…")
+    print("Building...")
     subprocess.check_call(cmd)
 
-    # ── Post-build ─────────────────────────────────
-    print(f"\n✅  Built successfully!")
-    print(f"   📁 {final}")
-    print(f"\n📋  What to distribute:")
+    # -- Post-build ---------------------------------------------
+    print(f"\nBuilt successfully!")
+    print(f"   {final}")
+    print("\nWhat to distribute:")
     if os.path.isdir(final):
-        print(f"   The '{name}/' folder — portable, no install needed.")
+        print(f"   The '{name}/' folder -- portable, no install needed.")
     else:
-        print(f"   The '{os.path.basename(final)}' file — a single portable executable.")
+        print(f"   The '{os.path.basename(final)}' file -- a single portable executable.")
 
     oname = "TubeScoop.exe" if sys.platform == "win32" else "TubeScoop"
-    print(f"\n🚀  Run:  {os.path.join(DIST_DIR, oname)}")
+    print(f"\nRun:  {os.path.join(DIST_DIR, oname)}")
 
 
 if __name__ == "__main__":
