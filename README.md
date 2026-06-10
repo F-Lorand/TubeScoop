@@ -10,6 +10,16 @@ No terminal needed. Paste a link, pick a format, click **Scoop it!**
 
 > I built this so that my kids could get music without having to download sketchy software, and now I'm sharing it with the world! 🍨
 
+**Why TubeScoop beats everything else out there:**  
+Most yt-dlp front-ends demand Python, pip, Node.js, terminal commands, or Linux-only setups. They're built by techies, for techies. TubeScoop flips that. It's a **single `.exe`** — nothing to install, nothing to configure. Double-click and go.
+
+- 🪟 **Runs on Windows** — no terminal, no Python, no Linux-only workarounds
+- 📦 **yt-dlp + ffmpeg built right in** — auto-updating, zero dependencies
+- 🧒 **Teen-friendly** — dark theme, big buttons, built so parents can hand it to their kids without sketchy software
+- 🔄 **Self-updating** — when YouTube breaks it, one click fixes it, no redownload needed
+
+Every other front-end asks you to set up an environment first. TubeScoop asks one question: *What do you want to download?*
+
 **[⬇️ Download for Windows](https://github.com/F-Lorand/TubeScoop/releases/latest)** – no Python required.
 
 ---
